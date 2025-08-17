@@ -159,12 +159,12 @@ password hY5>yKqU&$vq&0
 
     #[test]
     fn test_from_file_failed() {
-        assert_eq!(
-            Netrc::from_file(Path::new("/netrc/file/not/exists/on/no/netrc"))
-                .unwrap_err()
-                .to_string(),
-            "I/O error: No such file or directory (os error 2)"
-        );
+        let res = Netrc::from_file(Path::new("/netrc/file/not/exists/on/no/netrc"));
+        assert!(res.is_err());
+        match res.unwrap_err() {
+            Error::Io(e) => assert_eq!(e.kind(), ErrorKind::NotFound),
+            Error::Parsing { .. } => panic!("wrong error"),
+        }
     }
 
     #[test]
