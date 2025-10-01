@@ -173,4 +173,33 @@ password hY5>yKqU&$vq&0
         let nrc = Netrc::from_file(fi.as_path()).unwrap();
         check_nrc(&nrc);
     }
+
+    #[test]
+    fn test_comment_lines_in_netrc() {
+        let content = "\
+machine localhost
+login user
+password abc12345
+
+# machine 127.0.0.1
+# login none
+# password PAT
+
+machine remote
+login root
+password fine
+";
+
+        let nrc: Netrc = content.parse().unwrap();
+
+        assert_eq!(nrc.hosts.len(), 2);
+
+        assert_eq!(nrc.hosts["localhost"].login, "user");
+        assert_eq!(nrc.hosts["localhost"].password, "abc12345");
+
+        assert_eq!(nrc.hosts["remote"].login, "root");
+        assert_eq!(nrc.hosts["remote"].password, "fine");
+
+        assert!(!nrc.hosts.contains_key("127.0.0.1"));
+    }
 }
