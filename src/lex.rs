@@ -5,6 +5,7 @@ pub struct Lex<'a> {
     pub lineno: u32,
     pub instream: Chars<'a>,
     pub pushback: VecDeque<String>,
+    pub at_line_start: bool,
 }
 
 impl<'a> Lex<'a> {
@@ -13,6 +14,7 @@ impl<'a> Lex<'a> {
             lineno: 1,
             instream: content.chars(),
             pushback: VecDeque::new(),
+            at_line_start: true,
         }
     }
 
@@ -20,6 +22,9 @@ impl<'a> Lex<'a> {
         let ch = self.instream.next();
         if ch == Some('\n') {
             self.lineno += 1;
+            self.at_line_start = true;
+        } else if ch.is_some_and(|c| !c.is_whitespace()) {
+            self.at_line_start = false;
         }
         ch
     }
@@ -28,6 +33,7 @@ impl<'a> Lex<'a> {
         let mut s = String::new();
         for ch in &mut self.instream {
             if ch == '\n' {
+                self.lineno += 1;
                 return s;
             }
             s.push(ch);

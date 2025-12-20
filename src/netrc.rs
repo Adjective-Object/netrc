@@ -77,13 +77,14 @@ impl std::str::FromStr for Netrc {
         let mut lexer = Lex::new(s);
 
         loop {
-            let saved_lineno = lexer.lineno;
             let tt = lexer.get_token();
             if tt.is_empty() {
                 break;
             }
             if tt.chars().nth(0) == Some('#') {
-                if lexer.lineno == saved_lineno && tt.len() == 1 {
+                // If it's a standalone # (not part of a value like "#pass"),
+                // consume the rest of the line (if we're not already at a line boundary)
+                if !lexer.at_line_start && tt.len() == 1 {
                     lexer.read_line();
                 }
                 continue;
@@ -131,10 +132,11 @@ impl std::str::FromStr for Netrc {
             let mut auth = Authenticator::default();
 
             loop {
-                let prev_lineno = lexer.lineno;
                 let tt = lexer.get_token();
                 if tt.starts_with('#') {
-                    if lexer.lineno == prev_lineno {
+                    // If it's a standalone # (not part of a value like "#pass"),
+                    // consume the rest of the line (if we're not already at a line boundary)
+                    if !lexer.at_line_start && tt.len() == 1 {
                         lexer.read_line();
                     }
                     continue;
